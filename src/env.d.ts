@@ -9,5 +9,6 @@ declare namespace NodeJS {
     VUE_APP_FIREBASE_STORAGE_BUCKET: string
     VUE_APP_FIREBASE_MESSAGING_SENDER_ID: string
     VUE_APP_FIREBASE_APP_ID: string
+    VUE_APP_NUVEM_FISCAL_API_KEY: string
   }
 }
