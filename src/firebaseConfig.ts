@@ -10,10 +10,8 @@ const firebaseConfig = {
   appId: process.env.VUE_APP_FIREBASE_APP_ID,
 }
 
-// Inicializa o Firebase
 const firebaseApp = initializeApp(firebaseConfig)
 
-// Inicializa o Firestore
 const db = getFirestore(firebaseApp)
 
 export { db }
