@@ -1,55 +1,57 @@
 <template>
   <q-page class="row items-center justify-evenly">
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
+    <!--titulo-->
+    <div class="full-width text-center">
+      <h1 class="text-h4 text-weight-bold text-primary">Bem-vindo ao SisAgron</h1>
+    </div>
+
+    <!--Card-->
+    <q-card class="card-options q-pa-sm">
+      <q-card-section class="text-center">
+        <p class="text-h6">O que você deseja fazer?</p>
+      </q-card-section>
+      <q-card-actions class="q-gutter-md justify-center">
+        <q-btn
+          color="primary"
+          label="Ver notas fiscais"
+          @click="$router.push('/NFes')"
+          icon="receipt"
+          padding="12px 24px"
+        />
+        <q-btn
+          color="secondary"
+          label="Gerenciar Fontes Pagadoras"
+          @click="$router.push('/fontes-pagadoras')"
+          icon="business"
+          padding="12px 24px"
+        />
+      </q-card-actions>
+    </q-card>
   </q-page>
 </template>
-
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import type { Todo, Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
-
+import { defineComponent } from 'vue'
 export default defineComponent({
   name: 'IndexPage',
-
-  components: {
-    ExampleComponent
-  },
-
-  setup () {
-    const todos = ref<Todo[]>([
-      {
-        id: 1,
-        content: 'ct1'
-      },
-      {
-        id: 2,
-        content: 'ct2'
-      },
-      {
-        id: 3,
-        content: 'ct3'
-      },
-      {
-        id: 4,
-        content: 'ct4'
-      },
-      {
-        id: 5,
-        content: 'ct5'
-      }
-    ]);
-
-    const meta = ref<Meta>({
-      totalCount: 1200
-    });
-
-    return { todos, meta };
-  }
-});
+})
 </script>
+
+<style scoped>
+.card-options {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.text-primary {
+  color: #1976d2;
+}
+.q-gutter-md {
+  margin-top: 12px;
+}
+
+q-btn {
+  font-size: 16px;
+  font-weight: 500;
+}
+</style>
