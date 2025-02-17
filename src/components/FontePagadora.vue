@@ -110,12 +110,6 @@ const { newFonte } = useAddFonte({
   fonte: novaFonte,
 })
 
-// const validarCpfCnpj = (cpfCnpj: string): boolean => {
-//   const regexCpf = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/
-//   const regexCnpj = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/
-//   return regexCpf.test(cpfCnpj) || regexCnpj.test(cpfCnpj)
-// }
-
 const adicionarFontePagadora = async (): Promise<void> => {
   await newFonte().then(async () => await getFontes())
 }

@@ -1,61 +1,78 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import * as admin from 'firebase-admin'
 import axios from 'axios'
-
+import { logger } from 'firebase-functions'
 admin.initializeApp()
 
-// Chave da API da Nuvem Fiscal
-const API_KEY = 'SUA_CHAVE_DA_API_AQUI'
-
+const TESTE_CNPJ = '00594457000148'
 interface NFe {
+  id?: string
+  anexos: string[]
+  arquivoEspelho: string
   chaveAcesso: string
   destinatarioRemetente: string
-  emisor: string
-  valorTotal: number
   dtEmissao: { time: string }
   dtEntradaSaida: { time: string }
+  emissor: string
+  malote: string
+  noNFe: number
+  tags: string[]
+  tipo: string
+  valorTotal: number
+}
+const API_KEY = process.env.NUVEM_FISCAL_API_KEY
+if (!API_KEY) {
+  logger.error('❌ ERRO: Chave da API da Nuvem Fiscal não definida.')
+}
+const buscarNFesPorCpfCnpj = async (cpfCnpj: string = TESTE_CNPJ): Promise<NFe[]> => {
+  try {
+    const response = await axios.get('https://api.nuvemfiscal.com.br/v1/nfe', {
+      params: { cpfCnpj },
+      headers: { Authorization: `Bearer ${API_KEY}` },
+    })
+    return response.data as NFe[]
+  } catch (error) {
+    logger.error(`Erro ao buscar NFes para CPF/CNPJ ${cpfCnpj}:`, error)
+    return []
+  }
 }
 
-// Função que será executada periodicamente
-export const verificarNovasNFes = onSchedule('every 5 minutes', async () => {
+export const verificarNovasNFes = onSchedule('*/5 * * * *', async () => {
+  logger.info('Iniciando verificação de NFes...')
+
   try {
-    // Busca todas as fontes pagadoras cadastradas
-    const fontesPagadoras = await admin.firestore().collection('fonte-pagadora').get()
+    const fontesPagadorasSnapshot = await admin.firestore().collection('fonte-pagadora').get()
 
-    // Itera sobre cada fonte pagadora
-    for (const fonte of fontesPagadoras.docs) {
+    if (fontesPagadorasSnapshot.empty) {
+      logger.warn('Nenhuma fonte pagadora cadastrada.')
+      return
+    }
+
+    const batch = admin.firestore().batch()
+    let novasNFesCount = 0
+
+    for (const fonte of fontesPagadorasSnapshot.docs) {
       const cpfCnpj = fonte.data().numDocUnico as string
-
-      // Busca as NFes vinculadas ao CPF/CNPJ da fonte pagadora
       const nfes = await buscarNFesPorCpfCnpj(cpfCnpj)
 
       for (const nfe of nfes) {
-        // Verifica se a NFe já existe no Firestore
-        const nfeExistente = await admin
-          .firestore()
-          .collection('nfe')
-          .where('chaveAcesso', '==', nfe.chaveAcesso)
-          .get()
+        const nfeRef = admin.firestore().collection('nfe').doc(nfe.chaveAcesso)
+        const nfeSnapshot = await nfeRef.get()
 
-        // Se a NFe não existir, adiciona ao Firestore
-        if (nfeExistente.empty) {
-          await admin.firestore().collection('nfe').add(nfe)
-          console.log(`NFe ${nfe.chaveAcesso} adicionada para a fonte pagadora ${cpfCnpj}`)
+        if (!nfeSnapshot.exists) {
+          batch.set(nfeRef, nfe)
+          novasNFesCount++
         }
       }
     }
 
-    console.log('Verificação de NFes concluída com sucesso!')
+    if (novasNFesCount > 0) {
+      await batch.commit()
+      logger.info(`Foram adicionadas ${novasNFesCount} novas NFes.`)
+    } else {
+      logger.info('Nenhuma nova NFe encontrada.')
+    }
   } catch (error) {
-    console.error('Erro ao verificar NFes:', error)
+    logger.error('Erro ao verificar NFes:', error)
   }
 })
-
-// Função para buscar NFes na API da Nuvem Fiscal
-const buscarNFesPorCpfCnpj = async (cpfCnpj: string): Promise<NFe[]> => {
-  const response = await axios.get('https://api.nuvemfiscal.com.br/v1/nfe', {
-    params: { cpfCnpj },
-    headers: { Authorization: `Bearer ${API_KEY}` },
-  })
-  return response.data as NFe[]
-}

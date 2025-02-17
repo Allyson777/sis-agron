@@ -19,10 +19,6 @@ export function useGetFontes() {
       }))
     } catch (error) {
       console.error('Erro ao carregar fontes pagadoras:', error)
-      // $q.notify({
-      // type: 'negative',
-      // message: 'Erro ao carregar fontes pagadoras',
-      // })
     } finally {
       loading.value = false
     }
